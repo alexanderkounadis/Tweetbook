@@ -1,43 +1,52 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Tweetbook.Data;
 using Tweetbook.Domain;
 
 namespace Tweetbook.Services
 {
     public class PostService : IPostService
     {
-        private readonly List<Post> _posts;
-        public PostService()
+        private readonly DataContext _ctx;
+
+        public PostService(DataContext ctx)
         {
-            _posts = new List<Post>();
-            for (int i = 0; i < 5; i++)
-            {
-                _posts.Add(new Post()
-                {
-                    Id = Guid.NewGuid(),
-                    Name = $"Post Name {i}"
-                });
-            }
+            _ctx = ctx;
         }
-        public List<Post> GetPosts()
+       
+        public async Task<List<Post>> GetPostsAsync()
         {
-            return _posts;
+            return await _ctx.Posts.ToListAsync();
         }
 
-        public Post GetPostById(Guid postId)
+        public async Task<bool> CreatePostAsync(Post post)
         {
-            return _posts.SingleOrDefault<Post>(p => p.Id == postId);
+            await _ctx.Posts.AddAsync(post);
+            return await _ctx.SaveChangesAsync() > 0;
         }
 
-        public bool UpdatePost(Post postToUpdate)
+        public async Task<Post> GetPostByIdAsync(Guid postId)
         {
-            var exists = GetPostById(postToUpdate.Id) != null;
-            if (!exists) return false;
-            var index = _posts.FindIndex(p => p.Id == postToUpdate.Id);
-            _posts[index] = postToUpdate;
-            return true;
+            return await _ctx.Posts.SingleOrDefaultAsync<Post>(p => p.Id == postId);
+        }
+
+        public async Task<bool> UpdatePostAsync(Post postToUpdate)
+        {
+
+           _ctx.Posts.Update(postToUpdate);
+            var updated = await _ctx.SaveChangesAsync();
+            return updated > 0;
+        }
+
+        public async Task<bool> DeletePostAsync(Guid postId)
+        {
+            var post = await GetPostByIdAsync(postId);
+            if (post == null) return false;
+            _ctx.Posts.Remove(post);
+            return await _ctx.SaveChangesAsync() > 0;
         }
     }
 }
