@@ -3,12 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Tweetbook.Options;
+using Tweetbook.Services;
 
 namespace Tweetbook.Installers
 {
@@ -19,6 +16,7 @@ namespace Tweetbook.Installers
             var jwtSettings = new JwtSettings();
             config.Bind(key: nameof(JwtSettings), jwtSettings);
             services.AddSingleton(jwtSettings);
+            services.AddScoped<IIdentityService, IdentityService>();
             services.AddAuthentication(configureOptions: x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
